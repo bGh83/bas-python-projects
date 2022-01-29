@@ -1,7 +1,5 @@
 # bas-python-projects
-some projects in python
+ _some projects in python_
 
-Projects
-
-azqa - Malware Analysis with Clustering (Study in progress)
-initial copy from https://github.com/uakyazi/malpaca-pub
+# Projects
+- [author: azqa](https://github.com/uakyazi/malpaca-pub) - Malware Analysis with Clustering (WIP)
