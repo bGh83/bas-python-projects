@@ -1,5 +1,5 @@
-import pcapreader as pcr
-import transform as tfm
+import genconmaps as pcr
+import gendistmatrices as tfm
 import genplots as gnp
 import genmodels as gnm
 
