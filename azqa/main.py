@@ -1,15 +1,19 @@
-import pcapreader as pr
-import transform as tf
+import pcapreader as pcr
+import transform as tfm
+import genplots as gnp
+import genmodels as gnm
 
 thresh = 20
-#connections =pr.getConnectionMap(pr.getPcap ('ISCX_Botnet-Training.pcap'))
-connections =pr.getConnectionMap(pr.getPcap ('virut2.pcap'))
+#connections =pcr.getConnectionMap(pr.getPcap ('ISCX_Botnet-Training.pcap'))
+connections = pcr.getConnectionMap(pcr.getPcap ('virut2.pcap'))
 
-connections =pr.removeConnections(connections, thresh)
-pr.getConnectionStat(connections)
+connections = pcr.removeConnections(connections, thresh)
+pcr.getConnectionStat(connections)
 
-#distSize = cr.getEuclideanDistanceMatrix(connections, thresh, 2)
-#distDelta = cr.getCosineDistanceMatrix(connections, thresh, 0)
-#distSport = cr.getCosineDistanceMatrix(connections, thresh, 3)
-distDport = tf.getCosineDistanceMatrix(connections, thresh, 4)
-    
+distSize = tfm.getEuclideanDistanceMatrix(connections, thresh, 2)
+distDelta = tfm.getEuclideanDistanceMatrix(connections, thresh, 0)
+distSport = tfm.getCosineDistanceMatrix(connections, thresh, 3)
+distDport = tfm.getCosineDistanceMatrix(connections, thresh, 4)
+distAll = tfm.getDistanceMatrix(distSize, distDelta, distSport, distDport)
+
+gnp.genScatterPlot(gnm.getTSNEProjection(distAll))

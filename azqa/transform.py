@@ -87,3 +87,11 @@ def getCosineDistanceMatrix(connections, thresh, col):
             
     print("OK. (", round(perf_counter()-start), "s )\n")            
     return ndistm
+
+def getDistanceMatrix(distSize, distDelta, distSport, distDport):
+    distm = []
+    for x in range(len(distSize)):
+        distm.append([])
+        for y in range(len(distSize)):
+            distm[x].append((distSize[x][y]+distDelta[x][y]+distSport[x][y]+distDport[x][y])/4.0)
+    return distm
