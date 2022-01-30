@@ -1,7 +1,9 @@
-import dpkt, datetime, socket
+import dpkt, datetime, socket, glob, os
 from time import perf_counter
 import numpy as np
+from config import config
 
+PCAP_LOC= config.PCAP_LOC
 
 def getConnectionStat(connections):
     size = []
@@ -36,8 +38,17 @@ def getConnectionDelta(key, timestamp, lastTimeStamps):
     lastTimeStamps[key] = ts
     return delta, lastTimeStamps
 
+def getConnectionMaps():
+    pcaps = glob.glob(PCAP_LOC+"/*.pcap")
+    print('About to read pcap...')
+    connections = {}
+    for pcap in pcaps:
+        key = os.path.basename(pcap)
+        connections = (getConnectionMap(pcap, key))
+    return connections
 
 def getConnectionMap(pcap):
+           
     start = perf_counter()
     skipped = 0  # skipped packets
     total = 0  # total packets

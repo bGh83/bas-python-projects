@@ -2,6 +2,26 @@ from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean, cosine
 from time import perf_counter
 
+def getMultiPcapLabelsIPMappings (connections)
+
+def getLabelsIPMappings(connections):
+    mapping = {}
+    meta = {}
+    labels = []
+    ipmapping = []
+    fno = 0;
+    for i, v in connections.items():
+        name = i[0] + "->" + i[1]
+        mapping[name] = fno
+        fno += 1
+        meta[name] = v
+    keys = list(meta.keys())   
+    inv_mapping = {v:k for k,v in mapping.items()} 
+    for x in range(len(connections.values())):
+        labels.append(mapping[keys[x]])
+        ipmapping.append((mapping[keys[x]], inv_mapping[mapping[keys[x]]])) 
+    return labels, inv_mapping, mapping, ipmapping, keys
+
 def getNormalizedDistance (distm):
     ndistm = []
     minx = min(min(distm))
