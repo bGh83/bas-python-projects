@@ -39,22 +39,25 @@ def getConnectionDelta(key, timestamp, lastTimeStamps):
     return delta, lastTimeStamps
 
 def getConnectionMaps():
-    pcaps = glob.glob(PCAP_LOC+"/*.pcap")
-    print('About to read pcap...')
+    pcaps = glob.glob(PCAP_LOC+"/*.pcap")    
     connections = {}
-    for pcap in pcaps:
-        key = os.path.basename(pcap)
-        connections = (getConnectionMap(pcap, key))
+    count = len(pcaps)
+    print("\nTotal ",count," pcaps...")
+    for pcap in pcaps:        
+        name = os.path.basename(pcap)
+        print("\nGenerating connection map from [",name,"]...")
+        if count == 1:
+            name = ''
+        connections = (getConnectionMap(getPcap(pcap), name))
     return connections
 
-def getConnectionMap(pcap):
+def getConnectionMap(pcap, name):
            
     start = perf_counter()
     skipped = 0  # skipped packets
     total = 0  # total packets
     connections = {}
-    lastTimeStamps = {}  # keeps a list of last timestamp of a connection
-    print("\nGenerating connection map...")
+    lastTimeStamps = {}  # keeps a list of last timestamp of a connection    
     for (timestamp, packet) in pcap:
         try:
 
@@ -80,8 +83,11 @@ def getConnectionMap(pcap):
             ipsrc = socket.inet_ntoa(ip.src)
             ipdst = socket.inet_ntoa(ip.dst)
 
-            # set key for map (src->dst)
-            key = (ipsrc, ipdst)
+            # set key for map (filename, src, dst)
+            if(name == ''):
+                key = (ipsrc, ipdst)
+            else:
+                key = (name, ipsrc, ipdst)
 
             # get delta and update lastTimeStamps with latest timestamp
             delta, lastTimeStamps = getConnectionDelta(

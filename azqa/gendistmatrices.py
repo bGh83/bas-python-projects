@@ -2,8 +2,6 @@ from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean, cosine
 from time import perf_counter
 
-def getMultiPcapLabelsIPMappings (connections)
-
 def getLabelsIPMappings(connections):
     mapping = {}
     meta = {}

@@ -1,7 +1,8 @@
-from pathlib import Path
+#from pathlib import Path
 from config import config
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import pandas as pd
 import seaborn as sns
 import os
@@ -10,6 +11,19 @@ TIMESTAMP = config.EXP_TS
 PLOT_LOC = config.TEST_RESULTS_LOC
 HEATMAP_LOC = os.path.join(PLOT_LOC, 'heatmaps')
 
+def plot(connections, thresh, col): 
+    
+    keys = list(connections.keys())
+    for key, values in connections.items():
+        fig = plt.figure(figsize=(10.0,9.0))
+        ax = fig.add_subplot(111)
+        ax.set_title(key)                         
+        plt.plot([pos[col] for pos in values][:thresh], 'b')
+        plt.plot([pos[col] for pos in values][:thresh], 'b.')
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(4))
+        plt.savefig(PLOT_LOC+"\\"+TIMESTAMP+"-C"+str(col)+"-"+str(keys.index(key)))
+
+    
 def genScatterPlot(projection):
     plt.scatter(*projection.T)    
     plt.savefig(PLOT_LOC+"/"+TIMESTAMP+"-plot-tsne-result")

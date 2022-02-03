@@ -1,7 +1,7 @@
 from sklearn.manifold import TSNE
 import numpy as np
 import hdbscan
-from config import CONFIG
+from config import config
 
 def getClusterStat(model):
     avg = 0.0
@@ -13,12 +13,12 @@ def getClusterStat(model):
           "Samples in noise:", str(sum([(1 if x==-1 else 0) for x in model.labels_])))
                                     
 def getTSNEProjection(distm):         
-    return TSNE(random_state=CONFIG.TSNE_RANDOM_STATE).fit_transform(distm)
+    return TSNE(random_state=config.TSNE_RANDOM_STATE).fit_transform(distm)
 
 def genHDBSCANModel(distm, size, samples):
     model = hdbscan.HDBSCAN(
-        min_cluster_size = CONFIG.HDBSCAN_MIN_CLUSTER_SIZE, 
-        min_samples = CONFIG.HDBSCAN_MIN_SAMPLES, 
+        min_cluster_size = config.HDBSCAN_MIN_CLUSTER_SIZE, 
+        min_samples = config.HDBSCAN_MIN_SAMPLES, 
         cluster_selection_method='leaf', 
         metric='precomputed')
     return model.fit(np.array([np.array(x) for x in distm]))
