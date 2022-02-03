@@ -5,18 +5,27 @@ import genplots as gnp
 import genmodels as gnm
 import genfiles as gnf
 import gendag as gnd
+import threading
+import json
+
 
 #connections =pcr.getConnectionMap(pr.getPcap ('ISCX_Botnet-Training.pcap'))
 connections = pcr.getConnectionMaps()
 
-connections = pcr.removeConnections(connections, config.CONN_THRESHOLD)
-pcr.getConnectionStat(connections)
+temp = connections
 
-gnp.genXYPlots(connections, config.CONN_THRESHOLD, 0)
-gnp.genXYPlots(connections, config.CONN_THRESHOLD, 2)
+connections = pcr.removeConnections(connections, 20, 250)
+size = pcr.getConnectionStat(connections)
+
+#gnp.genXYPlots(connections, config.CONN_THRESHOLD, 0)
+#gnp.genXYPlots(connections, config.CONN_THRESHOLD, 2)
 
 distSize = gdm.getEuclideanDistanceMatrix(connections, config.CONN_THRESHOLD, 2)
+with open('out.json', 'w') as outfile:
+    json.dump(distSize, outfile)
+    
 distDelta = gdm.getEuclideanDistanceMatrix(connections, config.CONN_THRESHOLD, 0)
+    
 distSport = gdm.getCosineDistanceMatrix(connections, config.CONN_THRESHOLD, 3)
 distDport = gdm.getCosineDistanceMatrix(connections, config.CONN_THRESHOLD, 4)
 distAll = gdm.getDistanceMatrix(distSize, distDelta, distSport, distDport)
@@ -35,3 +44,20 @@ clusterfile = gnf.genClusterfile(model, labels, mapping, inv_mapping)
 dagfile = gnf.genRelationshipGraphfile(model, clusterfile)
 gnd.genRelationshipGraphs(dagfile, model)
 gnp.genHeatMap(connections, mapping, keys, clusterfile, config.CONN_THRESHOLD)
+
+def hi():
+    print ("Hi")
+def bye():
+    print("Bye")
+
+t1 = threading.Thread(target=hi, name='t1')
+t2 = threading.Thread(target=bye, name='t2') 
+  
+# starting threads
+t1.start()
+t2.start()
+  
+# wait until all threads finish
+t1.join()
+t2.join()
+    

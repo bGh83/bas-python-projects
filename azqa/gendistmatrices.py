@@ -1,7 +1,20 @@
 from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean, cosine
 from time import perf_counter
+import sys
 
+def progress(count, total, suffix=''):
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+    
+    sys.stdout.write('[%s] %s%s ...%s\r'.format(x) % (bar, percents, '%', suffix))
+    sys.stdout.flush()
+    
+    
 def getLabelsIPMappings(connections):
     mapping = {}
     meta = {}
@@ -45,9 +58,10 @@ def getEuclideanDistanceMatrix(connections, thresh, col):
     start = perf_counter()    
     values = connections.values()
     distm = initializeMatrix(values)
-    
+    total = len(values)
     print("\nCalculating distance...")
-    for x in range(len(values)):    
+    for x in range(total):    
+        
         for y in range(x+1):
 
             i = [pos[col] for pos in list(values)[x]][:thresh]
@@ -61,7 +75,8 @@ def getEuclideanDistanceMatrix(connections, thresh, col):
                 dist, _ = fastdtw(i, j, dist=euclidean)
                 distm[x][y] = dist
                 distm[y][x] = dist
-    
+        print('\r{}'.format(x),"/",len(values), end='\r')
+        
     ndistm = getNormalizedDistance(distm)    
     print("OK. (", round(perf_counter()-start), "s )\n")            
     return ndistm

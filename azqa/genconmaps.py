@@ -2,7 +2,9 @@ import dpkt, datetime, socket, glob, os
 from time import perf_counter
 import numpy as np
 from config import config
+import statistics
 
+         
 PCAP_LOC= config.PCAP_LOC
 
 def getConnectionStat(connections):
@@ -13,15 +15,18 @@ def getConnectionStat(connections):
           " Cnt: ", len(connections.values()),
           "; Avg: ", round(np.mean(size)),
           "; Min: ", np.min(size),
-          "; Max: ", np.max(size), "]")
+          "; Max: ", np.max(size), 
+          "; Mode ", str(statistics.mode(size)),
+          "]")
+    return size
 
 
-def removeConnections(connections, threshold):
+def removeConnections(connections, lower_threshold, upper_threshold):
     spkt = 0
     keys = []
-    print("\nRemoving connections below threshold [", threshold, "]...")
+    print("\nRemoving connections exceeding thresholds...")
     for key, value in connections.items():
-        if(len(value) < threshold):
+        if((len(value) < lower_threshold) | (len(value) > upper_threshold)):
             keys.append(key)
             spkt = spkt+1
     for key in keys:
