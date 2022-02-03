@@ -12,7 +12,8 @@ connections = pcr.getConnectionMaps()
 connections = pcr.removeConnections(connections, config.CONN_THRESHOLD)
 pcr.getConnectionStat(connections)
 
-gnp.plot(connections, config.CONN_THRESHOLD, 2)
+gnp.genXYPlots(connections, config.CONN_THRESHOLD, 0)
+gnp.genXYPlots(connections, config.CONN_THRESHOLD, 2)
 
 distSize = gdm.getEuclideanDistanceMatrix(connections, config.CONN_THRESHOLD, 2)
 distDelta = gdm.getEuclideanDistanceMatrix(connections, config.CONN_THRESHOLD, 0)

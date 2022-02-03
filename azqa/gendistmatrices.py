@@ -9,7 +9,11 @@ def getLabelsIPMappings(connections):
     ipmapping = []
     fno = 0;
     for i, v in connections.items():
+        
         name = i[0] + "->" + i[1]
+        if(len(i) == 3):
+            name = i[0].split('.')[0] + "|" + i[1] + "->" + i[2]
+            
         mapping[name] = fno
         fno += 1
         meta[name] = v

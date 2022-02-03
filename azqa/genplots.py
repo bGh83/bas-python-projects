@@ -11,8 +11,7 @@ TIMESTAMP = config.EXP_TS
 PLOT_LOC = config.TEST_RESULTS_LOC
 HEATMAP_LOC = os.path.join(PLOT_LOC, 'heatmaps')
 
-def plot(connections, thresh, col): 
-    
+def genXYPlots(connections, thresh, col): 
     keys = list(connections.keys())
     for key, values in connections.items():
         fig = plt.figure(figsize=(10.0,9.0))
@@ -21,7 +20,10 @@ def plot(connections, thresh, col):
         plt.plot([pos[col] for pos in values][:thresh], 'b')
         plt.plot([pos[col] for pos in values][:thresh], 'b.')
         ax.xaxis.set_major_locator(ticker.MultipleLocator(4))
-        plt.savefig(PLOT_LOC+"\\"+TIMESTAMP+"-C"+str(col)+"-"+str(keys.index(key)))
+        location = os.path.join(PLOT_LOC, TIMESTAMP, 'C'+str(col))
+        if not os.path.exists(location):
+            os.makedirs(location)
+        plt.savefig(location+"\\"+str(keys.index(key)))
 
     
 def genScatterPlot(projection):

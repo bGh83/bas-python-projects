@@ -48,7 +48,7 @@ def getConnectionMaps():
         print("\nGenerating connection map from [",name,"]...")
         if count == 1:
             name = ''
-        connections = (getConnectionMap(getPcap(pcap), name))
+        connections.update(getConnectionMap(getPcap(pcap), name))
     return connections
 
 def getConnectionMap(pcap, name):
