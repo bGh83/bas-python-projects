@@ -1,6 +1,5 @@
-azqa/*.png
-azqa/.spyproject/
-azqa/__pycache__/
-azqa/pcaps/
-azqa/results/
+azqa/*.*
+azqa/!*.py
+azqa/
 .spyproject/
+

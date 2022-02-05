@@ -15,7 +15,7 @@ def getClusterStat(model):
 def getTSNEProjection(distm):         
     return TSNE(random_state=config.TSNE_RANDOM_STATE).fit_transform(distm)
 
-def genHDBSCANModel(distm, size, samples):
+def genHDBSCANModel(distm):
     model = hdbscan.HDBSCAN(
         min_cluster_size = config.HDBSCAN_MIN_CLUSTER_SIZE, 
         min_samples = config.HDBSCAN_MIN_SAMPLES, 

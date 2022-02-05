@@ -4,7 +4,7 @@ from config import config
 
 TIMESTAMP = config.EXP_TS
 RESULTS_LOC = config.TEST_RESULTS_LOC
-
+    
 def genClusterfile(model, labels, mapping, inv_mapping):
     final_clusters = {}
     final_probs = {}

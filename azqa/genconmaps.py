@@ -1,32 +1,73 @@
-import dpkt, datetime, socket, glob, os
+import dpkt, datetime, socket, glob, os, statistics, random
 from time import perf_counter
 import numpy as np
 from config import config
-import statistics
 
-         
-PCAP_LOC= config.PCAP_LOC
+THRESHOLD = config.CONN_THRESHOLD
+TIMESTAMP = config.EXP_TS
+RESULTS_LOC= config.TEST_RESULTS_LOC
+PCAP_LOC = config.PCAP_LOC
+ 
+# def writeAsJSON(name, connections):
+#     name = name.split('.')[0]
+#     with open(name+'.json', 'w') as outfile:
+#         json.dump(connections, outfile)
+
+def getRandomConnections (connections, count):        
+    samples = {}
+    for key in random.sample(connections.keys(), count):
+        samples[key] = connections[key]
+    return samples
 
 def getConnectionStat(connections):
     size = []
+    statfile = os.path.join(RESULTS_LOC,TIMESTAMP+'-con-stat.csv')        
+    if not os.path.exists(RESULTS_LOC):
+        os.mkdir(RESULTS_LOC)
+    outfile = open(statfile, 'w')    
+    outfile.write("key,delta,ip.len,sport,dport,ip.p,timestamp\n")
+    
+    delta = []
+    iplen = []    
     for key, value in connections.items():
-        size.append(len(value))
-    print("Connection Stat [",
-          " Cnt: ", len(connections.values()),
-          "; Avg: ", round(np.mean(size)),
-          "; Min: ", np.min(size),
-          "; Max: ", np.max(size), 
-          "; Mode ", str(statistics.mode(size)),
+        size.append(len(value))        
+        for v in value:            
+            delta.append(v[0])
+            iplen.append(v[1])
+            outfile.write('_'.join(key)+","+','.join([str(i) for i in v])+"\n")
+    
+        
+    print("Connection Stats [",
+          "Total:", len(connections.values()),
+          ";Avg:", round(np.mean(size)),
+          ";Min:", np.min(size),
+          ";Max:", np.max(size), 
+          ";Mode:", str(statistics.mode(size)),
           "]")
+    
+    print("Delta Stats [",
+          "Avg:", round(np.mean(delta)),
+          ";Min:", np.min(delta),
+          ";Max:", np.max(delta), 
+          ";Mode:", str(statistics.mode(delta)),
+          "]")
+    
+    print("Bytes Stats [",
+          "Avg:", round(np.mean(iplen)),
+          ";Min:", np.min(iplen),
+          ";Max:", np.max(iplen), 
+          ";Mode:", str(statistics.mode(iplen)),
+          "]")
+    
     return size
 
 
-def removeConnections(connections, lower_threshold, upper_threshold):
-    spkt = 0
+def removeConnections(connections):
+    spkt = 0    
     keys = []
     print("\nRemoving connections exceeding thresholds...")
     for key, value in connections.items():
-        if((len(value) < lower_threshold) | (len(value) > upper_threshold)):
+        if(len(value) < THRESHOLD):
             keys.append(key)
             spkt = spkt+1
     for key in keys:
@@ -53,7 +94,7 @@ def getConnectionMaps():
         print("\nGenerating connection map from [",name,"]...")
         if count == 1:
             name = ''
-        connections.update(getConnectionMap(getPcap(pcap), name))
+        connections.update(getConnectionMap(getPcap(pcap), name))    
     return connections
 
 def getConnectionMap(pcap, name):
@@ -65,12 +106,12 @@ def getConnectionMap(pcap, name):
     lastTimeStamps = {}  # keeps a list of last timestamp of a connection    
     for (timestamp, packet) in pcap:
         try:
-
+            
             eth = dpkt.ethernet.Ethernet(packet)
             if eth.type != dpkt.ethernet.ETH_TYPE_IP:
                 skipped = skipped + 1
                 continue
-
+            
             ip = eth.data
 
             # get ports
@@ -100,11 +141,12 @@ def getConnectionMap(pcap, name):
 
             # set value for map
             value = (
-                delta,
-                ip.p,
+                delta,                
                 ip.len,
                 sport,
-                dport)
+                dport,
+                ip.p,
+                timestamp)
 
             # add all to map
             if key not in connections.keys():
@@ -114,10 +156,10 @@ def getConnectionMap(pcap, name):
         except Exception as e:
             print(e)
         total = total + 1
+
     print("OK. (", round(perf_counter()-start), "s ) Total Packets: ",
           total, "; Skipped Packets: ", skipped, "\n")
     return connections
-
 
 def getPcap(filename):
     pcap = dpkt.pcap.Reader(open(filename, 'rb'))

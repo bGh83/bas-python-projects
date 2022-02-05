@@ -1,32 +1,42 @@
 from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean, cosine
 from time import perf_counter
-import sys
+import runThreads as rt
+from config import config
 
-def progress(count, total, suffix=''):
-    bar_len = 60
-    filled_len = int(round(bar_len * count / float(total)))
+thresh = config.CONN_THRESHOLD
 
-    percents = round(100.0 * count / float(total), 1)
-    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+def genDistDelta(connections):
+    global distDelta    
+    distDelta = getEuclideanDistanceMatrix(connections, 0)
 
+def genDistSize(connections):
+    global distSize
+    distSize = getEuclideanDistanceMatrix(connections, 1)   
+
+def genDistSport(connections):
+    global distSport
+    distSport = getCosineDistanceMatrix(connections, 2)
     
-    sys.stdout.write('[%s] %s%s ...%s\r'.format(x) % (bar, percents, '%', suffix))
-    sys.stdout.flush()
-    
-    
+def genDistDport(connections):
+    global distDport   
+    distDport = getCosineDistanceMatrix(connections, 3)
+
+def calculateDistances(connections):
+    print("\ncalculating distances....") 
+    rt.startThreads([genDistDelta, genDistSize, genDistSport, genDistDport], connections)
+    return getDistanceMatrix(distSize, distDelta, distSport, distDport)
+
 def getLabelsIPMappings(connections):
     mapping = {}
     meta = {}
     labels = []
     ipmapping = []
     fno = 0;
-    for i, v in connections.items():
-        
+    for i, v in connections.items():      
         name = i[0] + "->" + i[1]
         if(len(i) == 3):
-            name = i[0].split('.')[0] + "|" + i[1] + "->" + i[2]
-            
+            name = i[0].split('.')[0] + "|" + i[1] + "->" + i[2]            
         mapping[name] = fno
         fno += 1
         meta[name] = v
@@ -53,43 +63,34 @@ def initializeMatrix (values):
     distm = [-1] * len(values)
     distm = [[-1] * len(values) for i in distm]
     return distm
-    
-def getEuclideanDistanceMatrix(connections, thresh, col):    
+ 
+def getEuclideanDistanceMatrix(connections, col):    
     start = perf_counter()    
     values = connections.values()
     distm = initializeMatrix(values)
     total = len(values)
-    print("\nCalculating distance...")
-    for x in range(total):    
-        
-        for y in range(x+1):
-
+    
+    for x in range(total):            
+        for y in range(x+1):    
             i = [pos[col] for pos in list(values)[x]][:thresh]
             j = [pos[col] for pos in list(values)[y]][:thresh]
-            if len(i) == 0 or len(j) == 0:
-                continue
-
-            if x == y:
-                distm[x][y] = 0.0
-            else:
+            if len(i) == 0 or len(j) == 0: continue
+            distm[x][y] = 0.0
+            if x != y:                
                 dist, _ = fastdtw(i, j, dist=euclidean)
                 distm[x][y] = dist
                 distm[y][x] = dist
-        print('\r{}'.format(x),"/",len(values), end='\r')
-        
+        # print('\r{}'.format(x),"/",len(values), end='\r')        
     ndistm = getNormalizedDistance(distm)    
-    print("OK. (", round(perf_counter()-start), "s )\n")            
+    print("\nOK. (", round(perf_counter()-start), "s )\n")            
     return ndistm
 
 
-def getCosineDistanceMatrix(connections, thresh, col): 
-    
+def getCosineDistanceMatrix(connections, col): 
     start = perf_counter()        
     values = connections.values()
     distm = initializeMatrix(values)
         
-    print("\nCalculating distance...")        
-
     ngrams = []
     for x in range(len(values)):
         profile = dict()
@@ -103,10 +104,9 @@ def getCosineDistanceMatrix(connections, thresh, col):
     
     assert len(ngrams) == len(values)
     for x in range(len(ngrams)):
-        for y in range(x+1):
-            if x==y:
-                distm[x][y] = 0.0
-            else:                                
+        for y in range(x+1):            
+            distm[x][y] = 0.0
+            if x != y:                                
                 i = ngrams[x]
                 j = ngrams[y]
                 ngram_all = list(set(i.keys()) | set(j.keys()))
@@ -114,7 +114,8 @@ def getCosineDistanceMatrix(connections, thresh, col):
                 j_vec = [(j[item] if item in j.keys() else 0) for item in ngram_all]
                 dist = cosine(i_vec, j_vec)
                 distm[x][y] = dist
-                distm[y][x] = dist                
+                distm[y][x] = dist
+        # print('\r{}'.format(x),"/",len(values), end='\r')
 
     ndistm = []
     for a in range(len(distm)):

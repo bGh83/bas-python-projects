@@ -63,7 +63,6 @@ def genRelationshipGraphs(filename, model):
             comp.update(extras)
 
             mindist = 1000
-            minli1, minli2 = None, None
             for l in comp:
                 if nm != l:
                     diff = difference(nm, l)
@@ -90,7 +89,6 @@ def genRelationshipGraphs(filename, model):
             f2 = open(DOT_LOC, 'w')
             f2.write("digraph dag {\n")
             f2.write("rankdir=LR;\n")
-            num = 0
             for idx, li in names.items():
                 text = ''               
                 name = str(idx)+'\n'
