@@ -1,109 +1,130 @@
-import dpkt, datetime, socket, glob, os, statistics, random
+import dpkt, socket, glob, os, statistics, random
 from time import perf_counter
 import numpy as np
 from config import config
+from datetime import datetime
 
-THRESHOLD = config.CONN_THRESHOLD
+THRESHOLD = config.CONV_THRESHOLD
 TIMESTAMP = config.EXP_TS
 RESULTS_LOC= config.TEST_RESULTS_LOC
 PCAP_LOC = config.PCAP_LOC
- 
-# def writeAsJSON(name, connections):
-#     name = name.split('.')[0]
-#     with open(name+'.json', 'w') as outfile:
-#         json.dump(connections, outfile)
 
-def getRandomConnections (connections, count):        
+def getConversations (conversations, key, rows=-1, col=-1):    
+    conv = []
+    if ((col == -1) & (rows == -1)):
+        conv = [x for x in conversations.get(key)]
+    elif ((col > 0) & (rows == -1)):
+        conv = [x[col] for x in conversations.get(key)]
+    elif ((col == -1) & (rows > 0)):
+        conv = [x for x in conversations.get(key)][:rows]
+    else:
+        conv = [x[col] for x in conversations.get(key)][:rows]        
+    return conv
+
+def getRandomConversations (conversations, count):        
     samples = {}
-    for key in random.sample(connections.keys(), count):
-        samples[key] = connections[key]
+    for key in random.sample(conversations.keys(), count):
+        samples[key] = conversations[key]
     return samples
 
-def getConnectionStat(connections):
-    size = []
+def getConversationStat(conversations):
+    size = {}
     statfile = os.path.join(RESULTS_LOC,TIMESTAMP+'-con-stat.csv')        
     if not os.path.exists(RESULTS_LOC):
         os.mkdir(RESULTS_LOC)
     outfile = open(statfile, 'w')    
-    outfile.write("key,delta,ip.len,sport,dport,ip.p,timestamp\n")
+    outfile.write("ip.src,ip.dst,delta,ip.len,sport,dport,ip.p,timestamp\n")
     
     delta = []
-    iplen = []    
-    for key, value in connections.items():
-        size.append(len(value))        
+    iplen = []
+    timestamp = []    
+    for key, value in conversations.items():
+        size[key] = len(value)
         for v in value:            
             delta.append(v[0])
             iplen.append(v[1])
-            outfile.write('_'.join(key)+","+','.join([str(i) for i in v])+"\n")
+            timestamp.append(v[5])
+            outfile.write(','.join(key)+","+','.join([str(i) for i in v])+"\n")
     
-        
-    print("Connection Stats [",
-          "Total:", len(connections.values()),
-          ";Avg:", round(np.mean(size)),
-          ";Min:", np.min(size),
-          ";Max:", np.max(size), 
-          ";Mode:", str(statistics.mode(size)),
+    print ("\nPCAP Stats")
+    print("\nRecords from ",
+          datetime.utcfromtimestamp(min(timestamp)).strftime('%m/%d/%Y %H:%M:%S %Z'),
+          "to",
+          datetime.utcfromtimestamp(max(timestamp)).strftime('%m/%d/%Y %H:%M:%S %Z'))    
+    print("Conversations [",
+          "Total:", len(conversations.values()),
+          ";Avg:", round(np.mean(list(size.values()))),
+          ";Min:", np.min(list(size.values())),
+          ";Max:", np.max(list(size.values())), 
+          ";Mode:", str(statistics.mode(list(size.values()))),
           "]")
     
-    print("Delta Stats [",
+    print("Delta [",
           "Avg:", round(np.mean(delta)),
           ";Min:", np.min(delta),
           ";Max:", np.max(delta), 
           ";Mode:", str(statistics.mode(delta)),
           "]")
     
-    print("Bytes Stats [",
+    print("Bytes [",
           "Avg:", round(np.mean(iplen)),
           ";Min:", np.min(iplen),
           ";Max:", np.max(iplen), 
           ";Mode:", str(statistics.mode(iplen)),
           "]")
     
-    return size
+    print("\nTop 10 Conversations")
+    for key, value in sorted(size.items(), key=lambda x: x[1], reverse=True)[:10]:
+        print ("-",key[0],"->",key[1],":",value)
+        
+    outfile.close()
+    return size, timestamp
 
 
-def removeConnections(connections):
+def removeConversations(conversations):
     spkt = 0    
     keys = []
-    print("\nRemoving connections exceeding thresholds...")
-    for key, value in connections.items():
+    print("\nRemoving conversations exceeding thresholds...")
+    for key, value in conversations.items():
         if(len(value) < THRESHOLD):
             keys.append(key)
             spkt = spkt+1
     for key in keys:
-        del connections[key]
-    print("\nOK. Connections deleted: ", spkt)
-    return connections
+        del conversations[key]
+    print("\nOK. Conversations deleted: ", spkt)
+    return conversations
 
 # difference btw current and last packet of same src & dst
-def getConnectionDelta(key, timestamp, lastTimeStamps):
-    ts = datetime.datetime.utcfromtimestamp(timestamp)
+def getConversationDelta(key, timestamp, lastTimeStamps):
+    ts = datetime.utcfromtimestamp(timestamp)
     delta = 0
     if key in lastTimeStamps:
         delta = (ts - lastTimeStamps[key]).microseconds / 1000
     lastTimeStamps[key] = ts
     return delta, lastTimeStamps
 
-def getConnectionMaps():
+def getConversationMaps():
     pcaps = glob.glob(PCAP_LOC+"/*.pcap")    
-    connections = {}
+    conversations = {}
     count = len(pcaps)
     print("\nTotal ",count," pcaps...")
     for pcap in pcaps:        
         name = os.path.basename(pcap)
-        print("\nGenerating connection map from [",name,"]...")
+        print("\nGenerating conversation map from [",name,"]...")
         if count == 1:
-            name = ''
-        connections.update(getConnectionMap(getPcap(pcap), name))    
-    return connections
+           name = ''
+        file = open(pcap, 'rb')        
+        conversations.update(getConversationMap(dpkt.pcap.Reader(file), name))
+        file.close()        
+    return conversations
 
-def getConnectionMap(pcap, name):
+def getConversationMap(pcap, name):
            
     start = perf_counter()
     skipped = 0  # skipped packets
     total = 0  # total packets
-    connections = {}
-    lastTimeStamps = {}  # keeps a list of last timestamp of a connection    
+    conversations = {}
+    lastTimeStamps = {}  # keeps a list of last timestamp of a conversation    
     for (timestamp, packet) in pcap:
         try:
             
@@ -136,7 +157,7 @@ def getConnectionMap(pcap, name):
                 key = (name, ipsrc, ipdst)
 
             # get delta and update lastTimeStamps with latest timestamp
-            delta, lastTimeStamps = getConnectionDelta(
+            delta, lastTimeStamps = getConversationDelta(
                 key, timestamp, lastTimeStamps)
 
             # set value for map
@@ -149,9 +170,9 @@ def getConnectionMap(pcap, name):
                 timestamp)
 
             # add all to map
-            if key not in connections.keys():
-                connections[key] = []
-            connections[key].append(value)
+            if key not in conversations.keys():
+                conversations[key] = []
+            conversations[key].append(value)
 
         except Exception as e:
             print(e)
@@ -159,8 +180,4 @@ def getConnectionMap(pcap, name):
 
     print("OK. (", round(perf_counter()-start), "s ) Total Packets: ",
           total, "; Skipped Packets: ", skipped, "\n")
-    return connections
-
-def getPcap(filename):
-    pcap = dpkt.pcap.Reader(open(filename, 'rb'))
-    return pcap
+    return conversations

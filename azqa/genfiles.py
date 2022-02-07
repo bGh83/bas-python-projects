@@ -1,10 +1,32 @@
-import csv
-import os
+import csv, os, pickle, glob
 from config import config
 
 TIMESTAMP = config.EXP_TS
 RESULTS_LOC = config.TEST_RESULTS_LOC
-    
+CONV_LOC = config.CONV_LOC
+
+def saveCoversations(conversations): 
+    if not os.path.exists(CONV_LOC):
+        os.mkdir(CONV_LOC)
+    convfile = os.path.join(CONV_LOC+'\\'+TIMESTAMP+'-conversations.pkl')
+    with open(convfile, 'wb') as outfile:
+        pickle.dump(conversations, outfile)
+    outfile.close()
+    return outfile    
+
+def loadAllConversations(): 
+    convs = glob.glob(CONV_LOC+"/*.pkl")
+    conversations = {}
+    count = len(convs)
+    print("\nTotal ",count," conversations...")
+    for conv in convs:        
+        name = os.path.basename(conv)
+        print("\nMerging [",name,"] to conversation maps...")
+        with open(conv, 'rb') as outfile:
+            conversations.update(pickle.load(outfile))
+        outfile.close()        
+    return conversations    
+
 def genClusterfile(model, labels, mapping, inv_mapping):
     final_clusters = {}
     final_probs = {}
@@ -15,8 +37,9 @@ def genClusterfile(model, labels, mapping, inv_mapping):
         print("cluster: " + str(lab) + " num items: " +
               str(len([labels[x] for x in occ])))
         final_clusters[lab] = [labels[x] for x in occ]
-
+            
     clusterfile = os.path.join(RESULTS_LOC,TIMESTAMP+'-cluster-data.csv')
+    print("\nWriting ",clusterfile,"...")
     outfile = open(clusterfile, 'w')
     outfile.write("clusnum,connnum,probability,class,filename,srcip,dstip\n")
 
@@ -35,7 +58,7 @@ def genClusterfile(model, labels, mapping, inv_mapping):
 
 
 def genRelationshipGraphfile(model, clusterfile):
-    print('Producing DAG with relationships between pcaps')
+    print('\nProducing DAG with relationships between pcaps')
     clusters = {}
     numclus = len(set(model.labels_))
     with open(clusterfile, 'r') as f1:

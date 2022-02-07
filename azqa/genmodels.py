@@ -8,7 +8,7 @@ def getClusterStat(model):
     for l in list(set(model.labels_)):
         if l !=-1:
             avg+= sum([(1 if x==l else 0) for x in model.labels_])    
-    print("Cluster Cnt:", str(len(set(model.labels_))-1),
+    print("\nCluster Count:", str(len(set(model.labels_))-1),
           "Avg cluster size:", str(float(avg)/float(len(set(model.labels_))-1)),
           "Samples in noise:", str(sum([(1 if x==-1 else 0) for x in model.labels_])))
                                     

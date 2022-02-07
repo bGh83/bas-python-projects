@@ -3,20 +3,20 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 import seaborn as sns
-import os, errno, sys
+import os, errno
 from config import config
 
-THRESHOLD = config.CONN_THRESHOLD
+THRESHOLD = config.CONV_THRESHOLD
 TIMESTAMP = config.EXP_TS
 PLOT_LOC = config.TEST_RESULTS_LOC
 HEATMAP_LOC = os.path.join(PLOT_LOC, 'heatmaps')
 
-def genPlot(size):
-    plt.plot(size)
+def genPlot(size):    
+    plt.plot(size, marker ='o', ms = 2)
     
-def genXYPlots(connections, col): 
-    keys = list(connections.keys())
-    for key, values in connections.items():
+def genXYPlots(conversations, col): 
+    keys = list(conversations.keys())
+    for key, values in conversations.items():
         fig = plt.figure(figsize=(10.0,9.0))
         ax = fig.add_subplot(111)
         ax.set_title(key)                         
@@ -52,7 +52,7 @@ def genScatterPlotWithModel(model, distm, projection, labels, inv_mapping):
     assert len(model.labels_) == len(distm)
     mem_col = [sns.desaturate(x, p) for x, p in zip(col, model.probabilities_)]
     plt.scatter(*projection.T, s=50, linewidth=0, c=mem_col, alpha=0.2)
-    classes = ['Alexa', 'Hue', 'Somfy', 'malware']
+    classes = ['Alexa', 'Hue', 'Somfy', 'malware'] #need to check; leave it for time being
     for i, txt in enumerate(model.labels_):
         realind = labels[i]
         name = inv_mapping[realind]
@@ -73,10 +73,11 @@ def genScatterPlotWithModel(model, distm, projection, labels, inv_mapping):
 def readClusterfile(clusterfile):
     lines = []
     clusterinfo = {}
-    print("Reading ",clusterfile)
+    print("\nReading ",clusterfile,"...")
     if not os.path.exists(clusterfile):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), clusterfile)    
-    lines = open(clusterfile).readlines()[1:]
+    file = open(clusterfile)
+    lines = file.readlines()[1:]
     for line in lines:
         li = line.split(",")   # clusnum, connnum, prob, srcip, dstip
         srcip = li[5]
@@ -85,13 +86,14 @@ def readClusterfile(clusterfile):
         name = str('%12s->%12s' % (srcip, dstip))
         if li[0] not in clusterinfo.keys():
             clusterinfo[li[0]] = []
-        clusterinfo[li[0]].append((has, name))
-    return clusterinfo #{'clusnum': [(connum, 'srcip->dstip'), ... connections], ... clusters}
+        clusterinfo[li[0]].append((has, name))    
+    file.close()
+    return clusterinfo #{'clusnum': [(connum, 'srcip->dstip'), ... conversations], ... clusters}
         
-def genHeatMap(connections, mapping, keys, clusterfile):
-    values = list(connections.values())
+def genHeatMap(conversations, mapping, keys, clusterfile):
+    values = list(conversations.values())
     
-    print("Writing temporal heatmaps")
+    print("\nWriting temporal heatmaps...")
     if not os.path.exists(HEATMAP_LOC):
         os.mkdir(HEATMAP_LOC)
        
@@ -100,7 +102,6 @@ def genHeatMap(connections, mapping, keys, clusterfile):
         actlabels.append(mapping[keys[a]])
     clusterinfo = readClusterfile(clusterfile)    
                 
-    print("Rendering ... ")
     sns.set(font_scale=0.9)
     matplotlib.rcParams.update({'font.size': 10})
     for names, sname, q in [("Packet sizes", "bytes", 1), ("Interval", "gaps", 0), ("Source Port", "sport", 2), ("Dest. Port", "dport", 3)]:
