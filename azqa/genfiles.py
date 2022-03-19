@@ -8,7 +8,7 @@ CONV_LOC = config.CONV_LOC
 def saveCoversations(conversations): 
     if not os.path.exists(CONV_LOC):
         os.mkdir(CONV_LOC)
-    convfile = os.path.join(CONV_LOC+'\\'+TIMESTAMP+'-conversations.pkl')
+    convfile = os.path.join(CONV_LOC,TIMESTAMP+'-conversations.pkl')
     with open(convfile, 'wb') as outfile:
         pickle.dump(conversations, outfile)
     outfile.close()

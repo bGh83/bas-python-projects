@@ -115,7 +115,7 @@ def getConversationDelta(key, timestamp, lastTimeStamps):
     return delta, lastTimeStamps
 
 def getConversationMaps():
-    pcaps = glob.glob(PCAP_LOC+"/*.pcap")    
+    pcaps = glob.glob(PCAP_LOC+"/*.pcap")
     conversations = {}
     count = len(pcaps)
     print("\nTotal ",count," pcaps...")

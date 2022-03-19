@@ -24,8 +24,8 @@ def genConvPlots(conversations):
     i = 1
     for key, value in conversations.items():
         title = str(i) + "|" + key[0] +"->"+ key[1]
-        genPlot(value, title)        
-        plt.savefig(location+"\\"+key[0]+key[1]+"_"+str(i)+".jpg")
+        genPlot(value, title)  
+        plt.savefig(os.path.join(location,key[0]+key[1]+"_"+str(i)+".jpg"))
         i = i + 1
     
 def genXYPlots(conversations, col): 
@@ -39,12 +39,12 @@ def genXYPlots(conversations, col):
         ax.xaxis.set_major_locator(ticker.MultipleLocator(4))
         location = os.path.join(PLOT_LOC, TIMESTAMP, 'C'+str(col))
         if not os.path.exists(location):
-            os.makedirs(location)
-        plt.savefig(location+"\\"+str(keys.index(key)))
+            os.makedirs(location)           
+        plt.savefig(os.path.join(location,str(keys.index(key))))
     
 def genScatterPlot(projection):
-    plt.scatter(*projection.T)    
-    plt.savefig(PLOT_LOC+"/"+TIMESTAMP+"-plot-tsne-result")
+    plt.scatter(*projection.T)         
+    plt.savefig(os.path.join(PLOT_LOC,TIMESTAMP+"-plot-tsne-result"))
 
 def genSingleLinkageTreePlot(model):
     model.single_linkage_tree_.plot(cmap='viridis', colorbar=True)    
@@ -80,8 +80,8 @@ def genScatterPlotWithModel(model, distm, projection, labels, inv_mapping):
         if txt == -1:
             continue
         plt.scatter(projection.T[0][i], projection.T[1][i], color=col[i], alpha=0.6)
-        plt.annotate(thislab, (projection.T[0][i], projection.T[1][i]), color=thiscol, alpha=0.2)
-    plt.savefig(PLOT_LOC+"\\"+TIMESTAMP+"-plot-clustering-result")
+        plt.annotate(thislab, (projection.T[0][i], projection.T[1][i]), color=thiscol, alpha=0.2)        
+    plt.savefig(os.path.join(PLOT_LOC,TIMESTAMP+"plot-clustering-result"))
 
 def readClusterfile(clusterfile):
     lines = []
@@ -153,4 +153,4 @@ def genHeatMap(conversations, mapping, keys, clusterfile):
             plt.setp(g.get_yticklabels(), rotation=0)
             plt.subplots_adjust(top=0.92, bottom=0.02,
                                 left=0.25, right=1, hspace=0.94)
-            plt.savefig(HEATMAP_LOC+"\\"+TIMESTAMP+"-heatmap-"+sname+"-c"+clusnum)
+            plt.savefig(os.path.join(HEATMAP_LOC,TIMESTAMP+"-heatmap-"+sname+"-c"+clusnum))
