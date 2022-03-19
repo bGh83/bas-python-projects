@@ -11,8 +11,22 @@ TIMESTAMP = config.EXP_TS
 PLOT_LOC = config.TEST_RESULTS_LOC
 HEATMAP_LOC = os.path.join(PLOT_LOC, 'heatmaps')
 
-def genPlot(size):    
-    plt.plot(size, marker ='o', ms = 2)
+def genPlot(size, title="Plot"):    
+    fig = plt.figure(figsize=(10.0,9.0))
+    ax = fig.add_subplot(111)   
+    ax.set_title(title)
+    plt.plot(size, marker ='o', ms = 2)   
+
+def genConvPlots(conversations):
+    location = os.path.join(PLOT_LOC)
+    if not os.path.exists(location):
+        os.makedirs(location)
+    i = 1
+    for key, value in conversations.items():
+        title = str(i) + "|" + key[0] +"->"+ key[1]
+        genPlot(value, title)        
+        plt.savefig(location+"\\"+key[0]+key[1]+"_"+str(i)+".jpg")
+        i = i + 1
     
 def genXYPlots(conversations, col): 
     keys = list(conversations.keys())
@@ -65,8 +79,7 @@ def genScatterPlotWithModel(model, distm, projection, labels, inv_mapping):
                 break
         if txt == -1:
             continue
-        plt.scatter(projection.T[0][i], projection.T[1]
-                    [i], color=col[i], alpha=0.6)
+        plt.scatter(projection.T[0][i], projection.T[1][i], color=col[i], alpha=0.6)
         plt.annotate(thislab, (projection.T[0][i], projection.T[1][i]), color=thiscol, alpha=0.2)
     plt.savefig(PLOT_LOC+"\\"+TIMESTAMP+"-plot-clustering-result")
 

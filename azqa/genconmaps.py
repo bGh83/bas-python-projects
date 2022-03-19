@@ -9,16 +9,23 @@ TIMESTAMP = config.EXP_TS
 RESULTS_LOC= config.TEST_RESULTS_LOC
 PCAP_LOC = config.PCAP_LOC
 
-def getConversations (conversations, key, rows=-1, col=-1):    
-    conv = []
-    if ((col == -1) & (rows == -1)):
-        conv = [x for x in conversations.get(key)]
-    elif ((col > 0) & (rows == -1)):
-        conv = [x[col] for x in conversations.get(key)]
-    elif ((col == -1) & (rows > 0)):
-        conv = [x for x in conversations.get(key)][:rows]
-    else:
-        conv = [x[col] for x in conversations.get(key)][:rows]        
+def getConversations (conversations, keys=[], rows=-1, col=-1):    
+    conv = {}
+    
+    if (len(keys) == 0):
+        for key, value in conversations.items():
+            keys.append(key)
+
+    for key in keys:
+        if ((col == -1) & (rows == -1)):
+            conv[key] = [x for x in conversations.get(key)]
+        elif ((col > 0) & (rows == -1)):
+            conv[key] = [x[col] for x in conversations.get(key)]
+        elif ((col == -1) & (rows > 0)):
+            conv[key] = [x for x in conversations.get(key)][:rows]
+        else:
+            conv[key] = [x[col] for x in conversations.get(key)][:rows]        
+            
     return conv
 
 def getRandomConversations (conversations, count):        
@@ -33,18 +40,22 @@ def getConversationStat(conversations):
     if not os.path.exists(RESULTS_LOC):
         os.mkdir(RESULTS_LOC)
     outfile = open(statfile, 'w')    
-    outfile.write("ip.src,ip.dst,delta,ip.len,sport,dport,ip.p,timestamp\n")
+    outfile.write("covnum,connum,ip.src,ip.dst,delta,ip.len,sport,dport,ip.p,timestamp\n")
     
     delta = []
     iplen = []
     timestamp = []    
+    cov = 1
     for key, value in conversations.items():
-        size[key] = len(value)
-        for v in value:            
+        size[key] = len(value)     
+        con = 1
+        for v in value:                       
             delta.append(v[0])
             iplen.append(v[1])
             timestamp.append(v[5])
-            outfile.write(','.join(key)+","+','.join([str(i) for i in v])+"\n")
+            outfile.write(str(cov)+','+str(con)+','+','.join(key)+","+','.join([str(i) for i in v])+"\n")
+            con = con + 1
+        cov = cov+1
     
     print ("\nPCAP Stats")
     print("\nRecords from ",
@@ -85,7 +96,7 @@ def removeConversations(conversations):
     spkt = 0    
     keys = []
     print("\nRemoving conversations exceeding thresholds...")
-    for key, value in conversations.items():
+    for key, value in conversations.items():        
         if(len(value) < THRESHOLD):
             keys.append(key)
             spkt = spkt+1

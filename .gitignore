@@ -1,5 +1,8 @@
-azqa/*.*
-azqa/!*.py
-azqa/
+*.*
+!*.py
+*.png
+__pycache__/
+pcaps/
+results*/
+convs/
 .spyproject/
-

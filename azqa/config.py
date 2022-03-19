@@ -3,7 +3,7 @@ import os
 
 class config:
     EXP_TS = dt.now().strftime("%d%m%y-%H%M%S")
-    CONV_THRESHOLD = 20
+    CONV_THRESHOLD = 4
     TSNE_RANDOM_STATE=3072018
     PCAP_LOC=os.path.join(os.getcwd(), 'pcaps')
     CONV_LOC=os.path.join(os.getcwd(), 'convs')

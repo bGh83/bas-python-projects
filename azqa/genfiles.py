@@ -22,6 +22,7 @@ def loadAllConversations():
     for conv in convs:        
         name = os.path.basename(conv)
         print("\nMerging [",name,"] to conversation maps...")
+        # for timebeing pick only one sample of same connection from all conversations
         with open(conv, 'rb') as outfile:
             conversations.update(pickle.load(outfile))
         outfile.close()        
