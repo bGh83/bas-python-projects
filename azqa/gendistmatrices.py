@@ -140,6 +140,6 @@ def getDistanceMatrix(distBytes, distDelta, distSport, distDport):
         distm.append([])
         for y in range(len(distBytes)):
             distm[x].append((distBytes[x][y]+distDelta[x][y]+distSport[x][y]+distDport[x][y])/4.0)
-            if((distBytes[x][y]+distDelta[x][y]+distSport[x][y]+distDport[x][y]) == 0):
-                print("\nHi")
+            #if((distBytes[x][y]+distDelta[x][y]+distSport[x][y]+distDport[x][y]) == 0):
+                #print("\nHi")
     return distm

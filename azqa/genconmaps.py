@@ -36,6 +36,7 @@ def getRandomConversations (conversations, count):
 
 def getConversationStat(conversations):
     size = {}
+    ips = {}
     statfile = os.path.join(RESULTS_LOC,TIMESTAMP+'-con-stat.csv')        
     if not os.path.exists(RESULTS_LOC):
         os.mkdir(RESULTS_LOC)
@@ -47,7 +48,18 @@ def getConversationStat(conversations):
     timestamp = []    
     cov = 1
     for key, value in conversations.items():
-        size[key] = len(value)     
+        size[key] = len(value)
+        
+        if key[0] in ips:
+            ips[key[0]] = ips[key[0]] + 1
+        else:
+            ips[key[0]] = 1
+        
+        if key[1] in ips:
+            ips[key[1]] = ips[key[1]] + 1
+        else:
+            ips[key[1]] = 1
+            
         con = 1
         for v in value:                       
             delta.append(v[0])
@@ -87,6 +99,10 @@ def getConversationStat(conversations):
     print("\nTop 10 Conversations")
     for key, value in sorted(size.items(), key=lambda x: x[1], reverse=True)[:10]:
         print ("-",key[0],"->",key[1],":",value)
+        
+    print("\nTop 10 IP's")
+    for key, value in sorted(ips.items(), key=lambda x: x[1], reverse=True)[:10]:
+        print ("-",key,":",value)
         
     outfile.close()
     return size, timestamp
