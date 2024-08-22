@@ -1,8 +1,14 @@
-*.*
-!*.py
 *.png
 __pycache__/
 pcaps/
 results*/
 convs/
 .spyproject/
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+venv/
+.github/
+.idea/
